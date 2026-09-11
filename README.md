@@ -177,3 +177,51 @@ whether it is still the same pipeline, and whether it is allowed to ship.**
 ## License
 
 MIT
+
+---
+
+## Run it yourself
+
+```bash
+git clone https://github.com/hammas159/insurance-mlops
+cd insurance-mlops
+
+pip install -e .         # zero dependencies to resolve
+pytest -q                # 42 tests, under a second
+```
+
+```python
+from insurance import FeatureStore, detect_skew, ModelCard, ReleaseGate, ConsentLedger
+
+store = FeatureStore()
+store.write("cust-1", "prior_claims", 1, event_time=t(1))
+store.write("cust-1", "prior_claims", 4, event_time=t(60))
+
+store.get_as_of("cust-1", "prior_claims", t(30)).value    # 1, not 4
+rows, labels = store.build_training_set(decisions, ["prior_claims"])
+
+detect_skew(training_rows, serving_rows)["safe_to_serve"]
+
+ReleaseGate().evaluate(card=card, metrics=metrics, fairness=fairness, skew=skew)
+```
+
+## Problems hit while building this
+
+**Modelling one timestamp per feature was not enough.** The first version recorded only
+when a fact became *true*. But a claim filed on Monday and entered into the system on
+Wednesday was not available to a model running on Tuesday — so a training set built from
+event time still leaks, just less obviously. *Fixed* by carrying both `event_time` and
+`available_at`, with the store refusing to record a value as knowable before it happened.
+
+**Purging left a trapdoor.** After deleting values older than a retention cutoff, an
+as-of query for an early date fell back to... nothing, correctly — but only because the
+query is availability-ordered. It would have been easy to write a version that returned
+the next surviving value instead, silently answering with data from the wrong period
+*after* the correct data was legally deleted. There is now a test asserting a purged
+value stays purged.
+
+**Withdrawal of consent was almost made retroactive.** The instinct is that withdrawing
+consent invalidates past use. It does not: a model trained lawfully in March was lawful
+in March, and retroactive invalidation is a *different* obligation from deletion.
+Conflating them makes both harder to reason about, so `permits(purpose, at=...)` answers
+for the moment asked, and that asymmetry is a test.
