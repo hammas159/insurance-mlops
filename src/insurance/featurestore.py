@@ -57,11 +57,18 @@ class FeatureStore:
     _history: dict[tuple[str, str], list[FeatureValue]] = field(default_factory=dict)
 
     def write(
-        self, entity: str, feature: str, value, event_time: float,
+        self,
+        entity: str,
+        feature: str,
+        value,
+        event_time: float,
         available_at: float | None = None,
     ) -> FeatureValue:
         record = FeatureValue(
-            entity=entity, feature=feature, value=value, event_time=event_time,
+            entity=entity,
+            feature=feature,
+            value=value,
+            event_time=event_time,
             available_at=event_time if available_at is None else available_at,
         )
         series = self._history.setdefault((entity, feature), [])
@@ -84,11 +91,8 @@ class FeatureStore:
         index = bisect.bisect_right(times, as_of)
         return series[index - 1] if index else None
 
-    def vector_as_of(
-        self, entity: str, features: Sequence[str], as_of: float
-    ) -> dict[str, object]:
-        return {f: (v.value if (v := self.get_as_of(entity, f, as_of)) else None)
-                for f in features}
+    def vector_as_of(self, entity: str, features: Sequence[str], as_of: float) -> dict[str, object]:
+        return {f: (v.value if (v := self.get_as_of(entity, f, as_of)) else None) for f in features}
 
     def build_training_set(
         self, labels: Sequence[tuple[str, float, int]], features: Sequence[str]

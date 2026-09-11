@@ -66,13 +66,13 @@ class ModelCard:
 
         if self.evaluation:
             lines += ["## Evaluation", ""]
-            lines += [f"| metric | value |", "|---|---|"]
+            lines += ["| metric | value |", "|---|---|"]
             lines += [f"| {k} | {v} |" for k, v in sorted(self.evaluation.items())]
             lines += [""]
 
         if self.fairness:
             lines += ["## Fairness", ""]
-            lines += [f"| measure | value |", "|---|---|"]
+            lines += ["| measure | value |", "|---|---|"]
             lines += [f"| {k} | {v} |" for k, v in sorted(self.fairness.items())]
             lines += [""]
 
@@ -103,7 +103,8 @@ class ConsentLedger:
 
     def grant(self, subject: str, purposes: set[str], at: float | None = None) -> ConsentRecord:
         record = ConsentRecord(
-            subject=subject, purposes=frozenset(purposes),
+            subject=subject,
+            purposes=frozenset(purposes),
             granted_at=at if at is not None else time.time(),
         )
         self.records[subject] = record
@@ -122,7 +123,8 @@ class ConsentLedger:
         marketing model ends up trained on claims data.
         """
         return [
-            s for s in subjects
+            s
+            for s in subjects
             if (r := self.records.get(s)) is not None and r.permits(purpose, at=at)
         ]
 
@@ -139,7 +141,11 @@ class ReleaseGate:
     require_no_skew: bool = True
 
     def evaluate(
-        self, *, card: ModelCard, metrics: dict, fairness: dict | None = None,
+        self,
+        *,
+        card: ModelCard,
+        metrics: dict,
+        fairness: dict | None = None,
         skew: dict | None = None,
     ) -> dict:
         failures: list[str] = []
@@ -165,8 +171,7 @@ class ReleaseGate:
             worst = fairness.get("worst_disparate_impact")
             if worst is not None and worst < 1 - self.max_disparate_impact_gap:
                 failures.append(
-                    f"disparate impact {worst:.3f} below "
-                    f"{1 - self.max_disparate_impact_gap:.2f}"
+                    f"disparate impact {worst:.3f} below {1 - self.max_disparate_impact_gap:.2f}"
                 )
 
         if self.require_no_skew and skew is not None and not skew.get("safe_to_serve", True):

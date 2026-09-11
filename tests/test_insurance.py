@@ -17,6 +17,7 @@ from insurance.governance import (
 )
 from insurance.skew import detect_skew
 
+
 # Readable timestamps: t(1) is day 1.
 def t(day: float) -> float:
     return day * 86_400.0
@@ -24,12 +25,14 @@ def t(day: float) -> float:
 
 def complete_card(**kw) -> ModelCard:
     defaults = dict(
-        name="claims-fraud", version="1.0",
+        name="claims-fraud",
+        version="1.0",
         intended_use="Triage motor claims for manual review.",
         out_of_scope=["Pricing", "Underwriting declines"],
         training_data="Motor claims 2023-2025, 180k records.",
         limitations=["Not validated on commercial fleet policies."],
-        owner="risk-analytics", reviewed_by="compliance",
+        owner="risk-analytics",
+        reviewed_by="compliance",
     )
     return ModelCard(**{**defaults, **kw})
 
@@ -190,8 +193,9 @@ class TestModelCard:
 
     def test_every_required_field_is_checked(self):
         for field_name in ModelCard.REQUIRED:
-            card = complete_card(**{field_name: [] if field_name in
-                                    {"out_of_scope", "limitations"} else ""})
+            card = complete_card(
+                **{field_name: [] if field_name in {"out_of_scope", "limitations"} else ""}
+            )
             assert field_name in card.missing_fields()
 
     def test_markdown_names_an_unassigned_owner_rather_than_omitting_it(self):
@@ -244,23 +248,20 @@ class TestConsent:
 class TestReleaseGate:
     def test_a_good_model_is_approved(self):
         result = ReleaseGate().evaluate(
-            card=complete_card(), metrics={"gini": 0.45, "brier": 0.12},
+            card=complete_card(),
+            metrics={"gini": 0.45, "brier": 0.12},
             fairness={"worst_disparate_impact": 0.92},
             skew={"safe_to_serve": True, "critical": 0},
         )
         assert result["approved"] and result["failures"] == []
 
     def test_an_incomplete_card_blocks_release(self):
-        result = ReleaseGate().evaluate(
-            card=complete_card(owner=""), metrics={"gini": 0.45}
-        )
+        result = ReleaseGate().evaluate(card=complete_card(owner=""), metrics={"gini": 0.45})
         assert not result["approved"]
         assert any("incomplete" in f for f in result["failures"])
 
     def test_an_unreviewed_card_blocks_release(self):
-        result = ReleaseGate().evaluate(
-            card=complete_card(reviewed_by=""), metrics={"gini": 0.45}
-        )
+        result = ReleaseGate().evaluate(card=complete_card(reviewed_by=""), metrics={"gini": 0.45})
         assert any("not been reviewed" in f for f in result["failures"])
 
     def test_weak_discrimination_blocks_release(self):
@@ -269,21 +270,21 @@ class TestReleaseGate:
 
     def test_poor_calibration_blocks_release_even_with_good_ranking(self):
         """An insurer prices from the level, not the ranking."""
-        result = ReleaseGate().evaluate(
-            card=complete_card(), metrics={"gini": 0.60, "brier": 0.40}
-        )
+        result = ReleaseGate().evaluate(card=complete_card(), metrics={"gini": 0.60, "brier": 0.40})
         assert any("brier" in f for f in result["failures"])
 
     def test_a_fairness_gap_blocks_release(self):
         result = ReleaseGate().evaluate(
-            card=complete_card(), metrics={"gini": 0.45},
+            card=complete_card(),
+            metrics={"gini": 0.45},
             fairness={"worst_disparate_impact": 0.55},
         )
         assert any("disparate impact" in f for f in result["failures"])
 
     def test_critical_skew_blocks_release(self):
         result = ReleaseGate().evaluate(
-            card=complete_card(), metrics={"gini": 0.45},
+            card=complete_card(),
+            metrics={"gini": 0.45},
             skew={"safe_to_serve": False, "critical": 2},
         )
         assert any("skew" in f for f in result["failures"])
