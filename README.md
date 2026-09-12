@@ -1,4 +1,4 @@
-# insurance-mlops
+# insurance-mlops (Python, pandas, zero core dependencies)
 
 [![ci](https://github.com/hammas159/insurance-mlops/actions/workflows/ci.yml/badge.svg)](https://github.com/hammas159/insurance-mlops/actions/workflows/ci.yml)
 ![python](https://img.shields.io/badge/python-3.10%2B-blue)
