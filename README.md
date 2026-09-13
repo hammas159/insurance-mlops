@@ -136,7 +136,7 @@ than anonymous.
 
 ## Tests
 
-**42 tests. No dependencies, no data, no cloud.**
+**48 tests (42 core + 6 for the optional Streamlit demo). No dependencies, no data, no cloud.**
 
 Point-in-time correctness is exact — a value either was knowable at a moment or it was
 not — so leakage is *asserted*, not sampled for.
@@ -187,7 +187,7 @@ git clone https://github.com/hammas159/insurance-mlops
 cd insurance-mlops
 
 pip install -e .         # zero dependencies to resolve
-pytest -q                # 42 tests, under a second
+pytest -q                # 48 tests, under a second
 ```
 
 ```python
@@ -204,6 +204,22 @@ detect_skew(training_rows, serving_rows)["safe_to_serve"]
 
 ReleaseGate().evaluate(card=card, metrics=metrics, fairness=fairness, skew=skew)
 ```
+
+### The demo dashboard (`ui` dependency group)
+
+`pyproject.toml` has declared a `streamlit` + `pandas` `ui` group since the repo's
+first commit; this is the actual demo that group was for. Three tabs, one per module:
+drag the point-in-time query slider past a feature's `available_at` and watch the
+visible value change; run skew detection on a clean vs. a units-mismatched batch; fill
+in a model card and metrics and watch the release gate name its specific refusal
+reason.
+
+```bash
+pip install streamlit pandas    # or: uv sync --group ui
+streamlit run ui/app.py
+```
+
+Local only, in-memory state — a demo of the library above, not a deployed service.
 
 ## Problems hit while building this
 

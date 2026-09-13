@@ -105,6 +105,16 @@ class TestPointInTime:
     def test_staleness_of_an_unknown_feature_is_none(self):
         assert FeatureStore().staleness("c1", "score", t(1)) is None
 
+    def test_history_for_returns_writes_sorted_by_availability(self):
+        store = FeatureStore()
+        store.write("c1", "score", 1, event_time=t(1))
+        store.write("c1", "score", 2, event_time=t(2), available_at=t(5))
+        history = store.history_for("c1", "score")
+        assert [r.value for r in history] == [1, 2]
+
+    def test_history_for_unknown_pair_is_empty(self):
+        assert FeatureStore().history_for("nobody", "score") == []
+
 
 class TestRetention:
     def test_purge_removes_values_before_the_cutoff(self):

@@ -138,3 +138,7 @@ class FeatureStore:
 
     def entities(self) -> set[str]:
         return {entity for entity, _ in self._history}
+
+    def history_for(self, entity: str, feature: str) -> list[FeatureValue]:
+        """The full write history for one (entity, feature), sorted by availability."""
+        return list(self._history.get((entity, feature), []))
