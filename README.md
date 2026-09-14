@@ -1,17 +1,47 @@
-# insurance-mlops (Python, pandas, zero core dependencies)
+<h1 align="center">insurance-mlops</h1>
+<p align="center"><i>The four things that actually break a deployed insurance model, solved in code rather than in a policy document</i></p>
 
-[![ci](https://github.com/hammas159/insurance-mlops/actions/workflows/ci.yml/badge.svg)](https://github.com/hammas159/insurance-mlops/actions/workflows/ci.yml)
-![python](https://img.shields.io/badge/python-3.10%2B-blue)
-![dependencies](https://img.shields.io/badge/dependencies-none-success)
-![license](https://img.shields.io/badge/license-MIT-green)
+<p align="center">
+  <a href="#1-point-in-time-correctness">Point-in-time</a> &middot;
+  <a href="#2-skew-is-not-drift">Skew vs drift</a> &middot;
+  <a href="#3-model-cards-where-the-useful-half-is-out-of-scope">Model cards</a> &middot;
+  <a href="#4-consent-and-purpose-limitation-enforced-at-read-time">Consent</a> &middot;
+  <a href="#the-release-gate-refuses">The release gate</a> &middot;
+  <a href="#problems-hit-while-building-this">Problems hit</a>
+</p>
 
-**The four things that actually break a deployed insurance model** — leakage, skew,
-undocumented models, and unlawful data reuse — each solved in code rather than in a
-policy document.
+<p align="center">
+  <a href="https://github.com/hammas159/insurance-mlops/actions/workflows/ci.yml"><img src="https://github.com/hammas159/insurance-mlops/actions/workflows/ci.yml/badge.svg" alt="ci"></a>
+  <img src="https://img.shields.io/badge/python-3.11%2B-blue" alt="python">
+  <img src="https://img.shields.io/badge/core%20deps-zero-success" alt="deps">
+  <img src="https://img.shields.io/badge/stack-pandas%20%C2%B7%20Streamlit-orange" alt="stack">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green" alt="license"></a>
+</p>
 
 ---
 
 ## 1. Point-in-time correctness
+
+```mermaid
+flowchart TD
+    F["feature request"] --> P["point-in-time read<br/>as of the decision date"]
+    P --> CN{"consent and purpose<br/>allow this use?"}
+    CN -->|"no"| R1["refuse at read time"]
+    CN -->|"yes"| T["train"]
+    T --> SK["training vs serving skew check"]
+    SK --> MC["model card,<br/>including OUT OF SCOPE"]
+    MC --> G{"release gate"}
+    G -->|"any check fails"| R2["refuse"]
+    G -->|"all pass"| D["deploy"]
+
+    style R1 fill:#dc2626,color:#fff
+    style R2 fill:#dc2626,color:#fff
+    style D fill:#16a34a,color:#fff
+```
+
+Consent is enforced **at read time**, not reviewed afterwards - which is the difference
+between a control and a policy document.
+
 
 The most expensive bug in production ML, and the one that never appears in a notebook:
 
@@ -173,6 +203,10 @@ whether it is still the same pipeline, and whether it is allowed to ship.**
   here.
 - No training code. Fitting is the easy part; this repo is the parts around it that
   decide whether the fit was valid.
+
+## Keywords
+
+MLOps &middot; insurance &middot; point-in-time correctness &middot; feature store &middot; data leakage &middot; training serving skew &middot; model cards &middot; model governance &middot; responsible AI &middot; GDPR &middot; consent management &middot; purpose limitation &middot; release gate &middot; actuarial modelling &middot; freMTPL2 &middot; regulated ML
 
 ## License
 
