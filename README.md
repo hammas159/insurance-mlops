@@ -239,21 +239,19 @@ detect_skew(training_rows, serving_rows)["safe_to_serve"]
 ReleaseGate().evaluate(card=card, metrics=metrics, fairness=fairness, skew=skew)
 ```
 
-### The demo dashboard (`ui` dependency group)
+### Input / Output
 
-`pyproject.toml` has declared a `streamlit` + `pandas` `ui` group since the repo's
-first commit; this is the actual demo that group was for. Three tabs, one per module:
-drag the point-in-time query slider past a feature's `available_at` and watch the
-visible value change; run skew detection on a clean vs. a units-mismatched batch; fill
-in a model card and metrics and watch the release gate name its specific refusal
-reason.
+![input](docs/images/input.png)
 
-```bash
-pip install streamlit pandas    # or: uv sync --group ui
-streamlit run ui/app.py
-```
+`python demo.py`
 
-Local only, in-memory state — a demo of the library above, not a deployed service.
+![output](docs/images/output.png)
+
+Each refusal names the specific condition that failed, which is the only form of refusal
+anyone can act on. v4.4.0 is the interesting one: the model is unchanged and its metrics
+are identical to the approved v4.2.0. What failed is that `vehicle_age` arrives in months
+at serving time and was trained in years — a fault no evaluation metric can see, because
+the evaluation set has the training units.
 
 ## Problems hit while building this
 
