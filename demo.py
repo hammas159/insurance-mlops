@@ -6,6 +6,7 @@ Each candidate fails a different way a deployed model actually breaks:
 an undocumented card, training/serving skew, weak discrimination, unfair
 outcomes. No model training, no network, no dependencies.
 """
+
 import sys
 
 sys.path.insert(0, "src")
@@ -37,18 +38,42 @@ skew_clean = detect_skew(TRAINING, TRAINING)
 skew_broken = detect_skew(TRAINING, SERVING)
 
 CANDIDATES = [
-    ("v4.2.0  documented, reviewed, calibrated", dict(
-        card=card(), metrics={"gini": 0.45, "brier": 0.12},
-        fairness={"worst_disparate_impact": 0.92}, skew=skew_clean)),
-    ("v4.3.0  no owner recorded", dict(
-        card=card(version="4.3.0", owner=""), metrics={"gini": 0.45, "brier": 0.12},
-        fairness={"worst_disparate_impact": 0.92}, skew=skew_clean)),
-    ("v4.4.0  units changed between train and serve", dict(
-        card=card(version="4.4.0"), metrics={"gini": 0.45, "brier": 0.12},
-        fairness={"worst_disparate_impact": 0.92}, skew=skew_broken)),
-    ("v4.5.0  barely separates, and unevenly", dict(
-        card=card(version="4.5.0"), metrics={"gini": 0.08, "brier": 0.31},
-        fairness={"worst_disparate_impact": 0.61}, skew=skew_clean)),
+    (
+        "v4.2.0  documented, reviewed, calibrated",
+        dict(
+            card=card(),
+            metrics={"gini": 0.45, "brier": 0.12},
+            fairness={"worst_disparate_impact": 0.92},
+            skew=skew_clean,
+        ),
+    ),
+    (
+        "v4.3.0  no owner recorded",
+        dict(
+            card=card(version="4.3.0", owner=""),
+            metrics={"gini": 0.45, "brier": 0.12},
+            fairness={"worst_disparate_impact": 0.92},
+            skew=skew_clean,
+        ),
+    ),
+    (
+        "v4.4.0  units changed between train and serve",
+        dict(
+            card=card(version="4.4.0"),
+            metrics={"gini": 0.45, "brier": 0.12},
+            fairness={"worst_disparate_impact": 0.92},
+            skew=skew_broken,
+        ),
+    ),
+    (
+        "v4.5.0  barely separates, and unevenly",
+        dict(
+            card=card(version="4.5.0"),
+            metrics={"gini": 0.08, "brier": 0.31},
+            fairness={"worst_disparate_impact": 0.61},
+            skew=skew_clean,
+        ),
+    ),
 ]
 
 print("INPUT")
